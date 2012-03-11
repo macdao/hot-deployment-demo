@@ -1,3 +1,4 @@
-README.idea
+.idea
 *.iml
 target
+out

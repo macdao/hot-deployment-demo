@@ -1,0 +1,72 @@
+发件人	xqi@cenonet.com
+发送至	"dev.group.web" <dev.group.web@cenonet.com>,
+dev.group.arch@cenonet.com
+日期	2010年4月10日 下午5:49
+主题	关于Java热部署技术的一些探索
+大家好：
+    这几周我参考Play framework，对Java热部署技术进行了一些探索，写了一些代码，跟大家分享一下。
+
+    重写了一个ClassLoader，并用到了jdk的instrument。
+    不过instrument只能在代码很有限的改变时能重新定义Class，它结合更换ClassLoader可以实现完美热部署。
+    目前的功能是，不管macdao.Macdao类如何变化，都可以进行热部署。
+
+    测试的话，是在程序运行时，更改com.macdao.Macdao多次，看到输出的日志变化，说明可以热部署。
+
+    如果可以在我们框架中良好的引入热部署技术，可以免去重启服务的步骤和等待。
+
+macdao.Macdao代码：
+package macdao;
+public class Macdao
+{
+    private int i;
+    public void say()
+    {
+        System.out.println("==" + i++);
+    }
+}
+
+然后更改方法内部代码，把"=="更改为"--"。
+
+最后增加类的内部变量或者方法：
+    private int i;
+    private int j; //added
+
+
+运行的命令
+$ java -javaagent:out/artifacts/unnamed/unnamed.jar com.macdao.Main
+由于是demo，所以有些部分是写死的，比如上面提到的jar，请自行build；还有MyClassLoader的prefix，请注意匹配。
+
+下面是程序运行的日志：
+new instance of class macdao.Macdao
+==0
+==1
+==2
+==3
+==4
+==5
+==6
+==7
+==8
+==9
+==10
+==11
+==12
+class modified:[MyClass{'/IdeaProjects/test/temp/out/production/temp/macdao/Macdao.class'}]
+--13
+--14
+--15
+--16
+--17
+--18
+--19
+--20
+--21
+class modified:[MyClass{'/IdeaProjects/test/temp/out/production/temp/macdao/Macdao.class'}]
+loaded class:macdao.Macdao
+new instance of class macdao.Macdao
+--0
+--1
+--2
+--3
+
+
